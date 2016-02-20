@@ -23,11 +23,9 @@ In this analysis we will utilize Census Data as well as US Geological Wate Quali
 Before we begin let's check for and install any necesary packages for this story
 ```{r}
 setwd("~/DSTribune/Stories/FlintWaterQuality")
-list.of.packages <- c("ggplot2", "acs")
-new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
-if(length(new.packages)>0) {install.packages(new.packages)}
 library(ggplot2)
 library(acs)
+library(dplyr)
 ```
 
 #### **Ingredient #1: Incentive**
@@ -41,16 +39,8 @@ For the financial piece of this analysis we will be relying upon the [America Co
 
 Look at water main leaks and pipes
 
-Water Quality
 ```{r}
-temp <- tempfile()
-download.file("http://waterqualitydata.us/Station/search?countrycode=US&statecode=US%3A26&countycode=US%3A26%3A049&mimeType=kml&zip=yes&sorted=no",temp)
-data <- read.table(unz(temp, "station.kml"))
-unlink(temp)
 
-
-download.file(url = "http://waterqualitydata.us/Station/search?countrycode=US&statecode=US%3A26&countycode=US%3A26%3A049&mimeType=kml&zip=yes&sorted=no", destfile = "stationLocations")
-unzip("/home/john/DSTribune/Stories/FlintWaterQuality/stationLocations.zip")
 ```
 
 Comparison of Detroit water to Lake Huron water to Flint River water: pH and chlorides
@@ -64,16 +54,30 @@ value = ResultMeasureValue
 ResultStatusIdentifier = Accepted
 
 ```{r}
-temp <- tempfile()
-download.file(,temp, mode="wb")
-con <- unz(temp, "result.csv")
-waterQuality <- read.table(con, header=T)
-unlink(temp)
+download.file("http://waterqualitydata.us/Result/search?countrycode=US&statecode=US%3A26&countycode=US%3A26%3A049&sampleMedia=Water&characteristicType=Inorganics%2C+Major%2C+Non-metals&characteristicName=Chloride&mimeType=csv&zip=yes&sorted=no", destfile = "waterQualityMI")
 
-download.file("http://waterqualitydata.us/Station/search?countrycode=US&statecode=US%3A26&countycode=US%3A26%3A049&sampleMedia=Water&characteristicType=Inorganics%2C+Major%2C+Non-metals&characteristicName=Chloride&mimeType=csv&zip=yes&sorted=no", destfile = "waterQualityMI")
-unzip(zipfile = "result.csv")
-dd <- read.table("result.csv", sep=",", header=T)
+#Unzip the file Results.csv to the same directory
+wqDf <- read.csv("result.csv")
 
+#Let's use dplyr to filter our results to "accepted" measurements
+wqDf <- filter(wqDf, ActivityMediaSubdivisionName == "Surface Water", ResultSampleFractionText == 'Dissolved', ResultStatusIdentifier == 'Accepted')
 ```
 
+Within Genesee County, MI we have a range of 1.20 to 185.00 mg/l of dissolved chloride in the surface water.
+```{r}
+wqDf <- wqDf %>%
+          filter(ResultMeasureValue != "NA")
 
+summary(wqDf$ResultMeasureValue)
+
+ggplot(data=wqDf, aes(ResultMeasureValue)) + geom_histogram(color = "black", fill = 'blue') + ggtitle("Distribution of surface water dissolved chloride \n in Genesee County, USGS NAWQA") + ylab("Frequency") + xlab("mg/l Dissolved Chloride")
+```
+
+Surface Water samples taken in the County of Genesee appear to show a multi-decade historical average of 44.76 mg/l and median of 23.50 mg/l. The large discrepancy between the mean and median shows that there may be significant outliers.
+
+To put this into perspective in 2014 the city of Detroit sampled and analyzed chloride concentration in tap water and [found an average concentration of 11.4 ppm which is equivalent to 11.4 mg/l](http://www.dwsd.org/downloads_n/customer_service/customer_information/water_quality_report.pdf) given the mass of water. Keep in mind this is not an apples to apples comparison as the prior is surface water measurements throughout the county of Genesee pre-treatment and the latter is treated water at the faucet.
+
+The Detroit Water and Sewerage Dept. uses water sourced from ["the Detroit River... Clinton River, Rouge River, Ecorse River, and parts of" [other water sheds].](http://www.dwsd.org/downloads_n/customer_service/customer_information/water_quality_report.pdf)
+
+Let's take a look at the initial chloride concentrations that DWSD sources the majority of their water from. 
+```{r}
