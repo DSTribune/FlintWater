@@ -1,4 +1,4 @@
-## An Analysis on Metropolitans Susceptible to Water Supply Metal Leaching as in the Flint Michigan Incident
+## An Analysis of Fresh Water Sources in Flint, Michigan Part I
 
 ###Introduction
 As many have heard recently residents of Flint Michigan have been rightly outraged due to the high presence of toxic chemicals including lead in their drinking water. The question arises how did this occur and was it a forseeable incident? The backstory that led up to this incident can be generalized into a few main chapters.
@@ -26,6 +26,7 @@ setwd("~/DSTribune/Stories/FlintWaterQuality")
 library(ggplot2)
 library(acs)
 library(dplyr)
+library(gdal)
 ```
 
 #### **Ingredient #1: Incentive**
@@ -75,7 +76,17 @@ ggplot(data=wqDf, aes(ResultMeasureValue)) + geom_histogram(color = "black", fil
 
 Surface Water samples taken in the County of Genesee appear to show a multi-decade historical average of 44.76 mg/l and median of 23.50 mg/l. The large discrepancy between the mean and median shows that there may be significant outliers.
 
+Let's visualize where these samples we're taken
+```{r}
+download.file("http://waterqualitydata.us/Result/search?countrycode=US&statecode=US%3A26&countycode=US%3A26%3A049&mimeType=csv&zip=yes&sorted=no", destfile = "stationLocationsMI")
+
+download.file("http://waterqualitydata.us/Station/search?countrycode=US&statecode=US%3A26&countycode=US%3A26%3A049&mimeType=kml&zip=yes&sorted=no", destfile = "stationShapesMI")
+
+
+```
+
 To put this into perspective in 2014 the city of Detroit sampled and analyzed chloride concentration in tap water and [found an average concentration of 11.4 ppm which is equivalent to 11.4 mg/l](http://www.dwsd.org/downloads_n/customer_service/customer_information/water_quality_report.pdf) given the mass of water. Keep in mind this is not an apples to apples comparison as the prior is surface water measurements throughout the county of Genesee pre-treatment and the latter is treated water at the faucet.
+
 
 The Detroit Water and Sewerage Dept. uses water sourced from ["the Detroit River... Clinton River, Rouge River, Ecorse River, and parts of" [other water sheds].](http://www.dwsd.org/downloads_n/customer_service/customer_information/water_quality_report.pdf)
 
