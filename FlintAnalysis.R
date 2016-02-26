@@ -2,7 +2,7 @@
 setwd("~/DSTribune/Stories/FlintWaterQuality")
 library(ggplot2)
 library(dplyr)
-
+library(XML)
 
 temp <- tempfile()
 download.file("http://waterqualitydata.us/Result/search?countrycode=US&statecode=US%3A26&countycode=US%3A26%3A049&sampleMedia=Water&characteristicType=Inorganics%2C+Major%2C+Non-metals&characteristicName=Chloride&mimeType=csv&zip=yes&sorted=no", temp)
@@ -28,6 +28,9 @@ wqWayne$County = "Wayne"
 
 #Merge the three County Water Measurements
 wqDf <- rbind(wqGen, wqSanilac, wqWayne)
+
+#Save an offline version of the merged county water data
+write.csv(wqDf, file ="MI3CountyCountyWaterData.csv")
 
 wqDf <- filter(wqDf, ActivityMediaSubdivisionName == "Surface Water", ResultSampleFractionText == 'Dissolved', ResultStatusIdentifier == 'Accepted' | ResultStatusIdentifier == 'Final' | ResultStatusIdentifier == 'Historical')
 wqDf$MonitoringLocationIdentifier <- as.character(wqDf$MonitoringLocationIdentifier)
@@ -73,24 +76,65 @@ Gen_San$p.value
 Gen_Way$p.value
 San_Way$p.value
 
-#Indeed initial untreated surface water concentrations of chloride are significantly lower in Wayne County compared to Sanilac and Genesee
+# Indeed initial untreated surface water concentrations of chloride are significantly lower in Wayne County compared to Sanilac and Genesee
 
-#We should get more granular now and display these samples relative to the three sites rather than entire counties
+# We should get more granular now and display these samples relative to the three sites rather than entire counties
+# Shout out to https://tagteam.harvard.edu/hub_feeds/1981/feed_items/1014182 for showing a simple way to extract data from KML's
 
 #Wayne KML
-temp <- tempfile()
-download.file("http://waterqualitydata.us/Station/search?countrycode=US&statecode=US%3A26&countycode=US%3A26%3A163&mimeType=kml&zip=yes&sorted=no", temp)
-genStations<- readLines(unz(temp, "station.kml"))
+download.file("http://waterqualitydata.us/Station/search?countrycode=US&statecode=US%3A26&countycode=US%3A26%3A163&mimeType=kml&zip=yes&sorted=no", destfile = "WayneCountyStations")
+unzip("WayneCountyStations", files="station.kml", overwrite = TRUE)
+wayneStations <- readLines("station.kml")
+
+test2 <- xmlTreeParse("station.kml")
+xmltop = xmlRoot(test2)
+xmlLine <- xmlSApply(xmltop, function(x) xmlSApply(x, xmlValue))
+stationDf <- data.frame(t(xmlLine),row.names=NULL)
 
 
-download.file("http://waterqualitydata.us/Station/search?countrycode=US&statecode=US%3A26&countycode=US%3A26%3A163&mimeType=kml&zip=yes&sorted=no", destfile = "wayneStationCoords")
-      
+
+plantcat <- xmlSApply(test2, function(x) xmlSApply(x, xmlValue))
+
+xpathSApply(test2,"//*/Data name="Monitoring Location Identifier"]",xmlValue)
+
+test <- xmlParse(wayneStations)
+
+
+
+test<- xmlToList(test)
+location <- as.list(test)
+
+location <- as.list(test[["Point"]][["location"]][["point"]])
+
+
+Placemark 
+ExtendedData
+<Data name="Monitoring Location Identifier">
+  
+  <Point>
+  <coordinates>-83.0419389,42.3671806</coordinates>
+  </Point>
+
+#$Document$Placemark$ExtendedData$Data$value
+#$Document$Placemark$Point$coordinates
+
+
+re <- "<coordinates> *([^<]+?) *<\\/coordinates>"
+coords <- grep(re,wayneStations)
+
+
+#<Point><coordinates>-83.0454444,42.3682500</coordinates></Point>
+
 #Sanilac KML
-download.file("http://waterqualitydata.us/Station/search?countrycode=US&statecode=US%3A26&countycode=US%3A26%3A151&mimeType=kml&zip=yes&sorted=no", destfile = "sanilacStationCoords")
+download.file("http://waterqualitydata.us/Station/search?countrycode=US&statecode=US%3A26&countycode=US%3A26%3A151&mimeType=kml&zip=yes&sorted=no", destfile = "SanilacCountyStations")
+unzip("SanilacCountyStations", files="station.kml", overwrite = TRUE)
+SanilacStations <- readLines("station.kml")
+
 
 #Genesee KML
-download.file("http://waterqualitydata.us/Station/search?countrycode=US&statecode=US%3A26&countycode=US%3A26%3A049&mimeType=kml&zip=yes&sorted=no", destfile = "geneseeStationCoords")
-unzip(zipfile='geneseeStationCoords')
+download.file("http://waterqualitydata.us/Station/search?countrycode=US&statecode=US%3A26&countycode=US%3A26%3A049&mimeType=kml&zip=yes&sorted=no", destfile = "GeneseeCountyStations")
+unzip("GeneseeCountyStations", files="station.kml", overwrite = TRUE)
+GeneseeStations <- readLines("station.kml")
 
 
 
