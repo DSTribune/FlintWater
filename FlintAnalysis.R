@@ -12,12 +12,6 @@ wqGen$County = "Genesee"
 #The water planned to be sourced from Lake Huron is located in Sanilac County
 #Source: http://www.nytimes.com/2014/05/26/business/detroit-plan-to-profit-on-water-looks-half-empty.html?_r=0
 
-temp <- tempfile()
-download.file("http://waterqualitydata.us/Result/search?countrycode=US&statecode=US%3A26&countycode=US%3A26%3A151&sampleMedia=Water&characteristicType=Inorganics%2C+Major%2C+Non-metals&characteristicName=Chloride&mimeType=csv&zip=yes&sorted=no", temp)
-wqSanilac<- read.csv(unz(temp, "result.csv"))
-wqSanilac$County = "Sanilac"
-
-
 #The majority of Detroits water is sourced from the Detroit River in Wayne County
 #Source: http://www.dwsd.org/downloads_n/customer_service/customer_information/water_quality_report.pdf
 
@@ -27,7 +21,7 @@ wqWayne<- read.csv(unz(temp, "result.csv"))
 wqWayne$County = "Wayne"
 
 #Merge the three County Water Measurements
-wqDf <- rbind(wqGen, wqSanilac, wqWayne)
+wqDf <- rbind(wqGen, wqWayne)
 
 #Save an offline version of the merged county water data
 write.csv(wqDf, file ="MI3CountyCountyWaterData.csv")
@@ -65,16 +59,13 @@ plot1
 # advantage because initial concentrations of chloride are lower
 
 Gen <- filter(wqDf, County == "Genesee")
-San <- filter(wqDf, County == "Sanilac")
 Way <- filter(wqDf, County == "Wayne")
 
-Gen_San <- t.test(Gen$ResultMeasureValue, San$ResultMeasureValue)
 Gen_Way <- t.test(Gen$ResultMeasureValue, Way$ResultMeasureValue)
-San_Way <- t.test(San$ResultMeasureValue, Way$ResultMeasureValue)
 
-Gen_San$p.value
+
 Gen_Way$p.value
-San_Way$p.value
+
 
 # Indeed initial untreated surface water concentrations of chloride are significantly lower in Wayne County compared to Sanilac and Genesee
 
@@ -83,58 +74,12 @@ San_Way$p.value
 
 #Wayne KML
 download.file("http://waterqualitydata.us/Station/search?countrycode=US&statecode=US%3A26&countycode=US%3A26%3A163&mimeType=kml&zip=yes&sorted=no", destfile = "WayneCountyStations")
-unzip("WayneCountyStations", files="station.kml", overwrite = TRUE)
-wayneStations <- readLines("station.kml")
-
-test2 <- xmlTreeParse("station.kml")
-xmltop = xmlRoot(test2)
-xmlLine <- xmlSApply(xmltop, function(x) xmlSApply(x, xmlValue))
-stationDf <- data.frame(t(xmlLine),row.names=NULL)
-
-
-
-plantcat <- xmlSApply(test2, function(x) xmlSApply(x, xmlValue))
-
-xpathSApply(test2,"//*/Data name="Monitoring Location Identifier"]",xmlValue)
-
-test <- xmlParse(wayneStations)
-
-
-
-test<- xmlToList(test)
-location <- as.list(test)
-
-location <- as.list(test[["Point"]][["location"]][["point"]])
-
-
-Placemark 
-ExtendedData
-<Data name="Monitoring Location Identifier">
-  
-  <Point>
-  <coordinates>-83.0419389,42.3671806</coordinates>
-  </Point>
-
-#$Document$Placemark$ExtendedData$Data$value
-#$Document$Placemark$Point$coordinates
-
-
-re <- "<coordinates> *([^<]+?) *<\\/coordinates>"
-coords <- grep(re,wayneStations)
-
-
-#<Point><coordinates>-83.0454444,42.3682500</coordinates></Point>
 
 #Sanilac KML
 download.file("http://waterqualitydata.us/Station/search?countrycode=US&statecode=US%3A26&countycode=US%3A26%3A151&mimeType=kml&zip=yes&sorted=no", destfile = "SanilacCountyStations")
-unzip("SanilacCountyStations", files="station.kml", overwrite = TRUE)
-SanilacStations <- readLines("station.kml")
-
 
 #Genesee KML
 download.file("http://waterqualitydata.us/Station/search?countrycode=US&statecode=US%3A26&countycode=US%3A26%3A049&mimeType=kml&zip=yes&sorted=no", destfile = "GeneseeCountyStations")
-unzip("GeneseeCountyStations", files="station.kml", overwrite = TRUE)
-GeneseeStations <- readLines("station.kml")
 
 
 
@@ -146,13 +91,8 @@ sampleData <- wqDf %>%
               totalSamples = n())
 print(sampleData)
 
-#At this point we used QGIS to open the kml and extract the coordinates for these 5 unique sample locations
-stationLocations <- read.csv(file="stationLocationsMI.csv")
-
-
-coords <- merge(x=coords, y=sampleData, by="MonitoringLocationIdentifier", all = TRUE)
-names(coords) <-  c("ID", "Lat", "Long", "Average [Cl-] (mg/l)", "Max [Cl-] (mg/l)", "Latest Sample", "Total Samples ")
-write.csv(coords,file="GeneseeSamples.csv")
+#Vis of chloride concentrations
+write.csv(sampleData,file="MI_SampleData.csv")
 
 
 
