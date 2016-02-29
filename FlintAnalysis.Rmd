@@ -131,8 +131,9 @@ This just got interesting. At first it appeared as though Genesee County had sig
 HighSampleSizePercentConc <- filter(percentConc, totalSamples >= 3)
 tapply(percentConc$Median, percentConc$County, mean)
 ```
-We have finally arrived closer to the truth. In general the rivers and lakes in Genesee County appear to have a much lower chloride concentration than the same tywpes of bodies of water in Wayne County. So wouldn't this put Flint, Mi at an advantage when sourcing their water locally? To explore this question we need to get more granular than the county. We need the exact coordinates of where the input for Flint's water is coming from.
+We have finally arrived closer to the truth. In general the rivers and lakes in Genesee County appear to have a much lower chloride concentration than those in Wayne County. So wouldn't this put Flint, Mi at an advantage when sourcing their water locally? To explore this question we need to get more granular than the county. We need the exact coordinates of where the input for Flint's water is coming from.
 
+Further research shows that Flint is source their water from the Holloway Reservoir. 
 
 To put this into perspective in 2014 the city of Detroit sampled and analyzed chloride concentration in tap water and [found an average concentration of 11.4 ppm which is equivalent to 11.4 mg/l](http://www.dwsd.org/downloads_n/customer_service/customer_information/water_quality_report.pdf) given the mass of water. Keep in mind this is not an apples to apples comparison as the prior is surface water measurements throughout the county of Genesee pre-treatment and the latter is treated water at the faucet.
 

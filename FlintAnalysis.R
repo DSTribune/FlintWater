@@ -4,6 +4,17 @@ library(ggplot2)
 library(dplyr)
 library(XML)
 
+#Biological 
+
+#http://www.waterqualitydata.us/Station/search?bBox=-82.755721%2C42.960807%2C-82.192181%2C44.062902&characteristicType=Biological&mimeType=csv&zip=yes&sorted=no&dataProfile=biological
+#Escherichia coli
+
+
+
+
+
+#Corrosivity (Chloride)
+
 temp <- tempfile()
 download.file("http://waterqualitydata.us/Result/search?countrycode=US&statecode=US%3A26&countycode=US%3A26%3A049&sampleMedia=Water&characteristicType=Inorganics%2C+Major%2C+Non-metals&characteristicName=Chloride&mimeType=csv&zip=yes&sorted=no", temp)
 wqGen<- read.csv(unz(temp, "result.csv"))
