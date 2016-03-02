@@ -4,12 +4,43 @@ library(ggplot2)
 library(dplyr)
 library(XML)
 
+#Source #1 for Detroit - Lake Huron
+#http://www.socwa.org/ccr.shtml
+# East, South, West, North
+PortHuronIntake <- as.character(c(-82.477726, 42.963747, -82.378506, 43.075698))
+
+#Source #2 for Detroit - Detroit River
+#http://www.socwa.org/ccr.shtml
+BellIsleIntake <- as.character(c(-83.041156, 42.323416, -82.877464, 42.373343))
+
+#Flint Intake
+#http://www.freep.com/story/news/local/michigan/flint-water-crisis/2016/01/30/flint-river-water/79396268/
+FlintRiverIntake <- as.character(c(-83.681822, 43.052751, -83.658274, 43.075276))
+
+
+
+
+#All of Michigan Microbio data
+#http://www.waterqualitydata.us/Station/search?countrycode=US&statecode=US%3A26&characteristicType=Microbiological&mimeType=csv&zip=yes&sorted=no&dataProfile=biological
+#biologicalresults.csv
+
 #Biological 
+temp <- tempfile()
+url = paste("http://www.waterqualitydata.us/Station/search?bBox=", FlintRiverIntake[1],"%2C",FlintRiverIntake[2],"%2C",FlintRiverIntake[3],"%2C",FlintRiverIntake[4],"&characteristicType=Microbiological&mimeType=csv&zip=yes&sorted=no&dataProfile=biological", sep="")
+#url = paste("http://www.waterqualitydata.us/Station/search?bBox=", PortHuronIntake[1],"%2C",PortHuronIntake[2],"%2C",PortHuronIntake[3],"%2C",PortHuronIntake[4],"&characteristicType=Microbiological&mimeType=csv&zip=yes&sorted=no&dataProfile=biological", sep="")
+download.file(url, temp)
+wqHuron<- read.csv(unz(temp, "biologicalresults.csv"))
+wqHuron$Site = "LakeHuron"
 
-#http://www.waterqualitydata.us/Station/search?bBox=-82.755721%2C42.960807%2C-82.192181%2C44.062902&characteristicType=Biological&mimeType=csv&zip=yes&sorted=no&dataProfile=biological
-#Escherichia coli
 
 
+
+
+
+
+##Escherichia coli
+
+#http://www.biovir.com/Images/pdf028.pdf
 
 
 

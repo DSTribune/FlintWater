@@ -1,4 +1,4 @@
-## An Analysis of the Flint Michigan Water Crisis
+## An Analysis of the Flint Michigan Initial Surface Water Corrosivitiy
 ### Part 1: Start at the Source
 
 ###Introduction
@@ -13,7 +13,7 @@ As many have heard recently residents of Flint Michigan have been rightly outrag
 
 ###Hypothesis
 
-In this analysis we will utilize Census Data as well as US Geological Wate Quality Survey Data to analyse the Flint incident starting at the source pre-treated water as well as nearby streams in Detroit and near Lake Huron. It is not meant to serve as conclusive evidence of any kind. We will be looking specifically at chloride concentrations.
+In this analysis we will utilize Census Data as well as US Geological Wate Quality Survey Data to analyse the Flint incident starting at the source pre-treated water as well as nearby streams in Detroit and near Lake Huron. It is not meant to serve as conclusive evidence of any kind. We will be looking specifically at chloride concentrations to see if Flint, Mi has very corrosive water to begin with.
 
 Before we begin let's check for and install any necesary packages for this story
 ```{r}
@@ -26,7 +26,7 @@ library(xtable)
 
 The city of Flint is located in Genesee County and this is really a story of three counties. Detroit, Wayne County that originally sold treated water from [multiple rivers including the Detroit River](http://www.dwsd.org/downloads_n/customer_service/customer_information/water_quality_report.pdf) to Flint as well as the KWA plant [under construction sourcing water from Lake Huron] (http://www.nytimes.com/2014/05/26/business/detroit-plan-to-profit-on-water-looks-half-empty.html?_r=0) located in Sanilac County. 
 
-We will download fresh water data from those three counties and merge them into one data frame
+We will download fresh water data from those two counties and merge them into one data frame
 ```{r}
 
 #Genesee (Flint)
@@ -87,14 +87,14 @@ plot1 <- plot1 + ggtitle("Surface Water Chloride Concentrations \n in Genesse an
 plot1
 ```
 
-What we care about in this plot is the average as well as the standard error of the distribution. It appears that Genesee County overall has a higher concentration of chloride in the surface water overall. Let's see if this is statistically significant or not as their is overlap in the standard error.
+What we care about in this plot is the average as well as the standard error of the distribution. On first glance it appears that Genesee County overall has a higher concentration of chloride in the surface water overall. Let's see if this is statistically significant or not as their is overlap in the standard error.
 ```{r}
 Gen <- filter(wqDf, County == "Genesee")
 Way <- filter(wqDf, County == "Wayne")
 Gen_Way <- t.test(Gen$ResultMeasureValue, Way$ResultMeasureValue, alternative=c("greater"))
 Gen_Way$p.value
 ```
-The p-value for this t-test shows that Genesee County has a *significantly greater* chloride conncentration in its surface water compared to Dwayne county. Remember Dwanye county houses the Detroit River AKA the old reliable and expensive source of water that Flint was sourcing its water from originally before switching.
+The p-value for this t-test shows that Genesee County has a significantly greater chloride conncentration in its surface water compared to Dwayne county. Remember Dwanye county houses the Detroit River AKA the old reliable and expensive source of water that Flint was sourcing its water from originally before switching.
 
 ```{r results='asis', echo=FALSE}
 print(xtable(percentConc), type="html")
@@ -131,23 +131,8 @@ This just got interesting. At first it appeared as though Genesee County had sig
 HighSampleSizePercentConc <- filter(percentConc, totalSamples >= 3)
 tapply(percentConc$Median, percentConc$County, mean)
 ```
-We have finally arrived closer to the truth. In general the rivers and lakes in Genesee County appear to have a much lower chloride concentration than those in Wayne County. So wouldn't this put Flint, Mi at an advantage when sourcing their water locally? To explore this question we need to get more granular than the county. We need the exact coordinates of where the input for Flint's water is coming from.
 
-Further research shows that Flint is source their water from the Holloway Reservoir. 
+##Conclusion 
 
-To put this into perspective in 2014 the city of Detroit sampled and analyzed chloride concentration in tap water and [found an average concentration of 11.4 ppm which is equivalent to 11.4 mg/l](http://www.dwsd.org/downloads_n/customer_service/customer_information/water_quality_report.pdf) given the mass of water. Keep in mind this is not an apples to apples comparison as the prior is surface water measurements throughout the county of Genesee pre-treatment and the latter is treated water at the faucet.
-
-
-
-
-
-
-The Detroit Water and Sewerage Dept. uses water sourced from ["the Detroit River... Clinton River, Rouge River, Ecorse River, and parts of" [other water sheds].](http://www.dwsd.org/downloads_n/customer_service/customer_information/water_quality_report.pdf)
-
-
-
-
-
-
-Let's take a look at the initial chloride concentrations that DWSD sources the majority of their water from. 
-```{r}
+We have finally arrived closer to the truth. In general the rivers and lakes in Genesee County appear to have a much lower chloride concentration than those in Wayne County. 
+We originally thought initial chloride concentrations would be high in addition to any chloride ions produced from the additional chlorine added to kill bacteria however this does not appear to be the case. It should be noted that Detroit also sourced its water from Lake Huron. This analysis also looked at bacterial measurements but found Flint, MI did not have enough samples taken from the USGS to warrant a similar analysis on bacteria concentrations. The lack of initial high corrosivity in the rivers relative to nearby counties as seen in the interactive map suggests that initial chloride concentrations may not have been the main contributor to corrosivity and instead the addition of chlorine to remove bacteria may have been the main contributor to the water corrosivity. 
