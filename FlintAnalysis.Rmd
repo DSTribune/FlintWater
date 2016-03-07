@@ -13,7 +13,7 @@ As many have heard recently residents of Flint Michigan have been rightly outrag
 
 ###Hypothesis
 
-In this analysis we will utilize Census Data as well as US Geological Wate Quality Survey Data to analyse the Flint incident starting at the source pre-treated water as well as nearby streams in Detroit and near Lake Huron. It is not meant to serve as conclusive evidence of any kind. We will be looking specifically at chloride concentrations to see if Flint, Mi has very corrosive water to begin with.
+In this analysis we will utilize Census Data as well as US Geological Survey data from the [Water Quality Portal](http://www.waterqualitydata.us) to analyse the Flint incident starting at the source pre-treated water as well as nearby streams in Detroit and near Lake Huron. It is not meant to serve as conclusive evidence of any kind. We will be looking specifically at chloride concentrations to see if Flint, Mi has very corrosive water to begin with.
 
 Before we begin let's check for and install any necesary packages for this story
 ```{r}
@@ -29,23 +29,32 @@ The city of Flint is located in Genesee County and this is really a story of thr
 We will download fresh water data from those two counties and merge them into one data frame
 ```{r}
 
-#Genesee (Flint)
-temp <- tempfile()
-download.file("http://waterqualitydata.us/Result/search?countrycode=US&statecode=US%3A26&countycode=US%3A26%3A049&sampleMedia=Water&characteristicType=Inorganics%2C+Major%2C+Non-metals&characteristicName=Chloride&mimeType=csv&zip=yes&sorted=no", temp)
-wqGen<- read.csv(unz(temp, "result.csv"))
+library(dataRetrieval)
+wqGen <- readWQPdata(characteristicName="Chloride",
+                     sampleMedia="Water",
+                     countycode="US:26:049") 
 wqGen$County = "Genesee"
-
-
-#Wayne (Detroit River)
-
-temp <- tempfile()
-download.file("http://waterqualitydata.us/Result/search?countrycode=US&statecode=US%3A26&countycode=US%3A26%3A163&sampleMedia=Water&characteristicType=Inorganics%2C+Major%2C+Non-metals&characteristicName=Chloride&mimeType=csv&zip=yes&sorted=no", temp)
-wqWayne<- read.csv(unz(temp, "result.csv"))
+  
+wqWayne <- readWQPdata(characteristicName="Chloride",
+                     sampleMedia="Water",
+                     countycode="US:26:163") 
 wqWayne$County = "Wayne"
-
 
 #Merge the three County Water Measurements
 wqDf <- rbind(wqGen, wqWayne)
+
+#######################################
+#Another option takes advantage of the siteInfo attribute returned from dataRetrieval:
+wqDf2<- readWQPdata(characteristicName="Chloride",
+                     sampleMedia="Water",
+                     countycode="US:26:049", #Wayne
+                     countycode="US:26:163") #Genesee
+
+siteInformation <- attr(wqDf2, "siteInfo") %>%
+  mutate(County = ifelse(CountyCode == "049", "Wayne","Genesee"))
+
+wqDf2 <- left_join(wqDf2, siteInformation) 
+#######################################
 
 #Save an offline version of the merged county water data
 write.csv(wqDf, file ="MI3CountyCountyWaterData.csv")
@@ -56,11 +65,11 @@ write.csv(wqDf, file ="MI3CountyCountyWaterData.csv")
 We filtered our data for high quality measurements only taken at the surface. We specifically collected data on dissolved chloride concentrations because chloride ions are the key element in contributing to the corrosion in Flint pipes leading the leaching of metals such as lead. In the second half of this story we will also cover how the addition of chlorine escalated chloride concentrations but for now we will focus on pre-treatment water quality.
 
 ```{r}
-wqDf <- filter(wqDf, ActivityMediaSubdivisionName == "Surface Water", ResultSampleFractionText == 'Dissolved', ResultStatusIdentifier == 'Accepted' | ResultStatusIdentifier == 'Final' | ResultStatusIdentifier == 'Historical')
-wqDf$MonitoringLocationIdentifier <- as.character(wqDf$MonitoringLocationIdentifier)
-wqDf$ActivityStartDate <- as.POSIXct(wqDf$ActivityStartDate)
-wqDf <- wqDf %>%
-  filter(ResultMeasureValue != "NA")
+wqDf <- filter(wqDf, 
+               ActivityMediaSubdivisionName == "Surface Water" &
+               ResultSampleFractionText == 'Dissolved' & 
+               ResultStatusIdentifier %in% c('Accepted', 'Final','Historical')) %>%
+  filter(!is.na(ResultMeasureValue))
 ```
 
 
